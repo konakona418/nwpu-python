@@ -2,7 +2,7 @@ import random
 from math import floor
 
 from aiohttp import ClientSession
-from yarl._url import URL
+from yarl import URL
 
 from nwpu.oa.mfa import CheckMfaRequiredResponse, MfaVerifyMethod, MfaInitResponse, MfaSendAppPushResponse, \
     MfaCheckAppPushStatusResponse, MfaSendSmsResponse, MfaVerifySmsResponse, MfaVerifyMailResponse, MfaSendMailResponse
@@ -41,7 +41,7 @@ class OaRequest:
         :return: True if the session is not configured, otherwise False.
         """
         resp = await self.sess.get(
-            OaRequestUrl.OA_LOGIN + '?service=' + redirect_url,
+            OaRequestUrl.OA_LOGIN + ('?service=' + redirect_url) if redirect_url != '' else '',
             headers=DEFAULT_HEADER,
             allow_redirects=True)
         # if the user has not logged in.
@@ -141,7 +141,7 @@ class OaRequest:
         data = form_data.model_dump(by_alias=True)
 
         resp = await self.sess.post(
-            OaRequestUrl.OA_LOGIN + '?service=' + redirect_url,
+            OaRequestUrl.OA_LOGIN + ('?service=' + redirect_url) if redirect_url != '' else '',
             headers=DEFAULT_HEADER,
             allow_redirects=True,
             data=data)
@@ -191,7 +191,6 @@ class OaRequest:
             headers=DEFAULT_HEADER,
             json={'gid': gid})
 
-        print(await resp.text())
         return MfaSendSmsResponse(**await resp.json())
 
     async def mfa_verify_sms(self, mfa_init_response: MfaInitResponse, verify_code: str) -> MfaVerifySmsResponse:

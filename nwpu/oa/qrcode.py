@@ -4,14 +4,14 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class QrStatus(str, Enum):
-    initialize = "0"
-    sent = "1"
-    valid = "2"
-    invalid = "3"
-    cancel = "5"
-    scanned = "8"
-    expired = "9"
+class QrStatus(int, Enum):
+    initialize = 0
+    sent = 1
+    valid = 2
+    invalid = 3
+    cancel = 5
+    scanned = 8
+    expired = 9
 
 class QrResponseQr(BaseModel):
     accounts: Optional[list[str] | str] = None
