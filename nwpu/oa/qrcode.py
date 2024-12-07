@@ -3,10 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from nwpu.utils.common import FAKE_TRACE_ID
 
-
-class QrStatus(int, Enum):
+class QrStatus(str, Enum):
     initialize = "0"
     sent = "1"
     valid = "2"
@@ -87,7 +85,7 @@ class QrLoginFormRequest(BaseModel):
     ##password: str = Field(alias='password')
     #mfa_state: str = Field(alias='mfaState')
     event_id: str = Field(alias='_eventId', default='submit')
-    execution: str = FAKE_TRACE_ID
+    execution: str = Field(alias='execution', default='')
 
     class Config:
         populate_by_name = True

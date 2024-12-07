@@ -1,6 +1,7 @@
 import aiohttp
 from aiohttp.streams import StreamReader
 
+from nwpu.mail.mail_oa import extract_sid
 from nwpu.mail.mail_struct import *
 from nwpu.utils.common import DEFAULT_HEADER
 from nwpu.utils.parse import StringArgsBuilder
@@ -22,9 +23,12 @@ class MailRequest:
 
     session: aiohttp.ClientSession
     sid: str
-    def __init__(self, session: aiohttp.ClientSession, sid: str):
+    def __init__(self, session: aiohttp.ClientSession, sid: str = ""):
         self.session = session
-        self.sid = sid
+        if sid == "":
+            self.sid = extract_sid(session)
+        else:
+            self.sid = sid
 
     async def get_mail_category(self, request_form: MailCategoryFormRequest = MailCategoryFormRequest()) -> MailCategoryResponse:
         """

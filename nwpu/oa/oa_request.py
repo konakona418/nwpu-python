@@ -2,13 +2,13 @@ import random
 from math import floor
 
 from aiohttp import ClientSession
-from urllib.parse import quote, urlparse, parse_qs
+from yarl._url import URL
 
-from nwpu.oa.mfa import OaLoginMfaResponse
+from nwpu.oa.mfa import CheckMfaRequiredResponse, MfaVerifyMethod, MfaInitResponse, MfaSendAppPushResponse, \
+    MfaCheckAppPushStatusResponse, MfaSendSmsResponse, MfaVerifySmsResponse, MfaVerifyMailResponse, MfaSendMailResponse
 from nwpu.oa.password import LoginMfaFormRequest, PasswordLoginFormRequest
 from nwpu.oa.qrcode import QrInitResponse, QrLoginFormRequest, QrCometResponse
 from nwpu.utils.common import DEFAULT_HEADER, timestamp_mill
-from nwpu.utils.crypto import wrap_password, encrypt_password
 from nwpu.utils.parse import StringArgsBuilder, find_tracer_id
 
 
@@ -21,6 +21,8 @@ class OaRequestUrl:
     OA_LOGIN = 'https://uis.nwpu.edu.cn/cas/login'
     OA_PWD_DETECT = 'https://uis.nwpu.edu.cn/cas/mfa/detect'
 
+    OA_MFA_INIT = "https://uis.nwpu.edu.cn/cas/mfa/initByType"
+
 
 class OaRequest:
     sess: ClientSession
@@ -32,24 +34,43 @@ class OaRequest:
     def set_cookie(self, cookie: str):
         self.sess.cookie_jar.update_cookies({'SESSION': cookie})
 
-    async def begin_oa_session(self, redirect_url ='') -> str:
+    async def begin_login(self, redirect_url =''):
+        """
+        Begin a new OA session.
+        :param redirect_url: the redirect url of the targeted application.
+        :return: True if the session is not configured, otherwise False.
+        """
         resp = await self.sess.get(
             OaRequestUrl.OA_LOGIN + '?service=' + redirect_url,
             headers=DEFAULT_HEADER,
             allow_redirects=True)
-        if len((tracer := find_tracer_id(await resp.text()))) > 0:
-            self.tracer_id = tracer[0]
-        return self.sess.cookie_jar.filter_cookies(resp.url).get('SESSION').value
+        # if the user has not logged in.
+        if not resp.history:
+            if len((tracer := find_tracer_id(await resp.text()))) > 0:
+                self.tracer_id = tracer[0]
+        return not resp.history
 
     async def get_public_key(self) -> str:
+        """
+        Get the RSA PCKS1-1.5 public key.
+        :return: the public key.
+        """
         resp = await self.sess.get(OaRequestUrl.OA_PUBLIC_KEY, headers=DEFAULT_HEADER)
         return await resp.text()
 
     async def qr_init(self) -> QrInitResponse:
+        """
+        Initialize the QR code login.
+        :return:
+        """
         resp = await self.sess.post(OaRequestUrl.OA_QR_INIT, headers=DEFAULT_HEADER)
         return QrInitResponse(**await resp.json())
 
     async def qr_get_image(self) -> bytes:
+        """
+        Get the QR code image.
+        :return:
+        """
         ts_mill = timestamp_mill() + floor(random.random() * 24)
         resp = await self.sess.get(
             StringArgsBuilder(OaRequestUrl.OA_QR_IMAGE)
@@ -60,19 +81,34 @@ class OaRequest:
         return await resp.read()
 
     async def qr_comet(self) -> QrCometResponse:
+        """
+        Probes the state of the QR code scanning.
+        :return:
+        """
         resp = await self.sess.post(OaRequestUrl.OA_QR_COMET, headers=DEFAULT_HEADER)
         return QrCometResponse(**await resp.json())
 
-    async def password_init(self, form_data: LoginMfaFormRequest) -> OaLoginMfaResponse:
+    async def password_init(self, form_data: LoginMfaFormRequest) -> CheckMfaRequiredResponse:
+        """
+        Checks the mfa state. If the data.mfa_required == True, the user should go through the mfa process.
+        :param form_data:
+        :return:
+        """
         data = form_data.model_dump(by_alias=True)
         resp = await self.sess.post(
             OaRequestUrl.OA_PWD_DETECT,
             headers=DEFAULT_HEADER,
             data=data,
         )
-        return OaLoginMfaResponse(**await resp.json())
+        return CheckMfaRequiredResponse(**await resp.json())
 
-    async def complete_qr_login(self, form_data: QrLoginFormRequest, redirect_url ='') -> list[str]:
+    async def finish_qr_login(self, form_data: QrLoginFormRequest, redirect_url ='') -> list[URL]:
+        """
+        Finish the QR code login. Auto-redirects to the target application.
+        :param redirect_url:
+        :param form_data:
+        :return: The redirect history.
+        """
         redirects = list()
         if self.tracer_id != '':
             print('tracer_id: ' + self.tracer_id)
@@ -84,44 +120,110 @@ class OaRequest:
                 .build(),
             headers=DEFAULT_HEADER,
             data=data,
-            allow_redirects=False
+            allow_redirects=True
         )
-        while resp.status == 302:
-            redirect_target = resp.headers.get('Location')
-            if redirect_target.endswith('/authorize'):
-                args = urlparse(redirects[0]).query
-                redirect_target += ('?' + args)
-            redirects.append(redirect_target)
-            resp = await self.sess.post(redirect_target, headers=DEFAULT_HEADER, allow_redirects=False)
-            if resp.status == 405:
-                resp = await self.sess.get(redirect_target, headers=DEFAULT_HEADER, allow_redirects=False)
-            print(resp.status)
+        for i in resp.history:
+            redirects.append(i.url)
 
         return redirects
 
-    async def complete_password_login(self, redirect_url: str, form_data: PasswordLoginFormRequest) -> list[str]:
+    async def finish_password_login(self, form_data: PasswordLoginFormRequest, redirect_url: str) -> list[URL]:
+        """
+        Finish the password login. Auto-redirects to the target application.
+        :param redirect_url:
+        :param form_data:
+        :return: The redirect history.
+        """
         redirects = list()
         if self.tracer_id != '':
-            print('tracer_id: ' + self.tracer_id)
+            #print('tracer_id: ' + self.tracer_id)
             form_data.execution = self.tracer_id
         data = form_data.model_dump(by_alias=True)
 
         resp = await self.sess.post(
             OaRequestUrl.OA_LOGIN + '?service=' + redirect_url,
             headers=DEFAULT_HEADER,
-            allow_redirects=False,
+            allow_redirects=True,
             data=data)
-        while resp.status == 302:
-            redirect_target = resp.headers.get('Location')
-            # todo: this is a temporary hack!!
-            if redirect_target.endswith('/authorize'):
-                args = urlparse(redirects[0]).query
-                redirect_target += ('?' + args)
-            redirects.append(redirect_target)
-            resp = await self.sess.post(redirect_target, headers=DEFAULT_HEADER, allow_redirects=False)
-            if resp.status == 405:
-                resp = await self.sess.get(redirect_target, headers=DEFAULT_HEADER, allow_redirects=False)
 
+        for i in resp.history:
+            redirects.append(i.url)
         return redirects
 
 
+    async def begin_mfa(self, mfa_type: MfaVerifyMethod, mfa_state: str) -> MfaInitResponse:
+        resp = await self.sess.get(
+            OaRequestUrl.OA_MFA_INIT + '/' + mfa_type.value + '?state=' + mfa_state,
+            headers=DEFAULT_HEADER,)
+
+        print(await resp.text())
+        return MfaInitResponse(**await resp.json())
+
+    async def mfa_send_app_push(self, mfa_init_response: MfaInitResponse) -> MfaSendAppPushResponse:
+        attest_url = mfa_init_response.data.attest_server_url
+        gid = mfa_init_response.data.gid
+
+        resp = await self.sess.post(
+            attest_url + '/api/guard/apppush/send',
+            headers=DEFAULT_HEADER,
+            json={'gid': gid})
+
+        return MfaSendAppPushResponse(**await resp.json())
+
+    async def mfa_verify_app_push(self, mfa_init_response: MfaInitResponse) -> MfaCheckAppPushStatusResponse:
+        attest_url = mfa_init_response.data.attest_server_url
+        gid = mfa_init_response.data.gid
+
+        resp = await self.sess.post(
+            attest_url + '/api/guard/apppush/status',
+            headers=DEFAULT_HEADER,
+            json={'gid': gid})
+
+        return MfaCheckAppPushStatusResponse(**await resp.json())
+
+
+    async def mfa_send_sms(self, mfa_init_response: MfaInitResponse) -> MfaSendAppPushResponse:
+        attest_url = mfa_init_response.data.attest_server_url
+        gid = mfa_init_response.data.gid
+
+        resp = await self.sess.post(
+            attest_url + '/api/guard/securephone/send',
+            headers=DEFAULT_HEADER,
+            json={'gid': gid})
+
+        print(await resp.text())
+        return MfaSendSmsResponse(**await resp.json())
+
+    async def mfa_verify_sms(self, mfa_init_response: MfaInitResponse, verify_code: str) -> MfaVerifySmsResponse:
+        attest_url = mfa_init_response.data.attest_server_url
+        gid = mfa_init_response.data.gid
+
+        resp = await self.sess.post(
+            attest_url + '/api/guard/securephone/valid',
+            headers=DEFAULT_HEADER,
+            json={'gid': gid, 'code': verify_code})
+
+        return MfaVerifySmsResponse(**await resp.json())
+
+    async def mfa_send_email(self, mfa_init_response: MfaInitResponse) -> MfaSendMailResponse:
+        attest_url = mfa_init_response.data.attest_server_url
+        gid = mfa_init_response.data.gid
+
+        resp = await self.sess.post(
+            attest_url + '/api/guard/secureemail/send',
+            headers=DEFAULT_HEADER,
+            json={'gid': gid})
+
+        return MfaSendMailResponse(**await resp.json())
+
+    async def mfa_verify_email(self, mfa_init_response: MfaInitResponse, verify_code: str) -> MfaVerifyMailResponse:
+
+        attest_url = mfa_init_response.data.attest_server_url
+        gid = mfa_init_response.data.gid
+
+        resp = await self.sess.post(
+            attest_url + '/api/guard/secureemail/valid',
+            headers=DEFAULT_HEADER,
+            json={'gid': gid, 'code': verify_code})
+
+        return MfaVerifyMailResponse(**await resp.json())

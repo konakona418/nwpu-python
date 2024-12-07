@@ -30,7 +30,7 @@ class MailOaRequest:
     def __init__(self, sess: ClientSession):
         self.sess: ClientSession = sess
 
-    async def get_oa_url(self) -> str:
+    async def get_oa_redirect(self) -> str:
         """
         GET, has redirect
         :return redirected url, should be applied later in oa login.
@@ -51,5 +51,10 @@ class MailOaRequest:
             return cookie.value
 
 def extract_sid(sess: ClientSession) -> str:
+    """
+    Extract sid from cookie.
+    :param sess:
+    :return:
+    """
     return sess.cookie_jar.filter_cookies('https://mail.nwpu.edu.cn').get('Coremail.sid').value
         
