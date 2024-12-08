@@ -261,6 +261,104 @@ class ECampusUserCardResponse(BaseModel):
         populate_by_name = True
 
 
+class ECampusUserConsumptionHistoryType(str, Enum):
+    day = "day"
+    week = "week"
+    month = "month"
+    year = "year"
+
+
+class ECampusUserConsumptionHistoryRequest(BaseModel):
+    """
+    GET
+    https://portal-service.nwpu.edu.cn/portalCenter/api/rest/center/personalData/getMyCost
+    GET params
+    """
+    time_range: ECampusUserConsumptionHistoryType | str = Field(alias='timeRange', default=ECampusUserConsumptionHistoryType.day.value)
+    begin_time: date = Field(alias='beginTime', default=date.today())
+    end_time: date = Field(alias='endTime', default=date.today())
+    page_size: int = Field(alias='pageSize', default=10)
+    page_index: int = Field(alias='pageIndex', default=0)
+    random_number: int = Field(alias='random_number', default=0)
+
+    def model_dump(
+        self,
+        *,
+        mode: Literal['json', 'python'] | str = 'python',
+        include: IncEx | None = None,
+        exclude: IncEx | None = None,
+        context: Any | None = None,
+        by_alias: bool = False,
+        exclude_unset: bool = False,
+        exclude_defaults: bool = False,
+        exclude_none: bool = False,
+        round_trip: bool = False,
+        warnings: bool | Literal['none', 'warn', 'error'] = True,
+        serialize_as_any: bool = False,
+    ) -> dict[str, Any]:
+        dumped = super().model_dump(mode=mode, include=include, exclude=exclude, context=context, by_alias=by_alias,
+                                    exclude_unset=exclude_unset, exclude_defaults=exclude_defaults,
+                                    exclude_none=exclude_none, round_trip=round_trip, warnings=warnings,
+                                    serialize_as_any=serialize_as_any)
+        dumped['beginTime'] = dumped['beginTime'].strftime("%Y-%m-%d")
+        dumped['endTime'] = dumped['endTime'].strftime("%Y-%m-%d")
+        dumped['timeRange'] = dumped['timeRange'].value \
+            if isinstance(dumped['timeRange'], ECampusUserConsumptionHistoryType) \
+            else dumped['timeRange']
+        return dumped
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+        json_encoders = {
+            date: lambda v: v.strftime("%Y-%m-%d"),
+            datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S"),
+            ECampusUserConsumptionHistoryType: lambda v: v.value,
+        }
+
+        
+class ECampusUserConsumptionListItem(BaseModel):
+    balance: float = Field(alias='blance')
+    operation_title: str = Field(alias='operationTitle')
+    occurrence_time: str = Field(alias='occurrenceTime')
+    payment: str
+    operation_type: str = Field(alias='operationType')
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
+class ECampusUserConsumptionHistoryDataInner(BaseModel):
+    total_sum: int = Field(alias='totalSum')
+    total_items: int = Field(alias='totalItems')
+    cost_list: Optional[List[ECampusUserConsumptionListItem | Any]] | Any = Field(alias='costList', default=None)
+    consume: str
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
+class ECampusUserConsumptionHistoryData(BaseModel):
+    data: Optional[ECampusUserConsumptionHistoryDataInner] | Any = Field(default=None)
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
+class ECampusUserConsumptionHistoryResponse(BaseModel):
+    code: int
+    message: Optional[str] = Field(default='')
+    data: Optional[ECampusUserConsumptionHistoryData] | Any = Field(default=None)
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
 class ECampusUserNetworkFeeRequest(BaseModel):
     """
     GET
@@ -425,6 +523,7 @@ class ECampusUserEventsRequest(BaseModel):
         json_encoders = {
             datetime: lambda dt: dt.strftime("%Y-%m-%d %H:%M:%S"),
             date: lambda d: d.strftime("%Y-%m-%d"),
+            ECampusUserEventsMode: lambda m: m.value,
         }
 
         

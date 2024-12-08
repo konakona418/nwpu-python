@@ -14,6 +14,7 @@ class ECampusUrl:
     USER_PORTRAIT = "https://authx-service.nwpu.edu.cn/personal/api/v1/me/portrait"
     USER_PAPER = "https://ecampus.nwpu.edu.cn/portal-api/v2/personalData/getPaper"
     USER_CARD = "https://ecampus.nwpu.edu.cn/portal-api/v2/personalData/getMyECard"
+    USER_CONSUMPTION_HISTORY = "https://portal-service.nwpu.edu.cn/portalCenter/api/rest/center/personalData/getMyCost"
     USER_NETWORK_FEE = "https://ecampus.nwpu.edu.cn/portal-api/v2/personalData/getNetworkFeeInfo"
     USER_BORROW_BOOKS = "https://ecampus.nwpu.edu.cn/portal-api/v2/personalData/getMyBooks"
     USER_PROPERTY = "https://ecampus.nwpu.edu.cn/portal-api/v2/personalData/getPropertyInfo"
@@ -94,6 +95,16 @@ class ECampusRequest:
         """
         resp = await self.sess.get(ECampusUrl.USER_CARD, headers=self.headers)
         return ECampusUserCardResponse(**await resp.json())
+
+    async def get_user_consumption_history(self, req: ECampusUserConsumptionHistoryRequest) -> ECampusUserConsumptionHistoryResponse:
+        """
+        Get user consumption history.
+        :return:
+        """
+        resp = await self.sess.get(ECampusUrl.USER_CONSUMPTION_HISTORY,
+                                   headers=self.headers,
+                                   params=req.model_dump(by_alias=True))
+        return ECampusUserConsumptionHistoryResponse(**await resp.json())
     
     async def get_user_network_fee(self) -> ECampusUserNetworkFeeResponse:
         """
