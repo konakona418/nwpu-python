@@ -1,15 +1,16 @@
-import json
 import random
 
 from aiohttp import ClientSession
 
 from ecampus.ec_oa import ECampusOaRequest
-from utils.common import DEFAULT_HEADER
 from ecampus.ec_struct import *
+from utils.common import DEFAULT_HEADER
+
 
 class ECampusUrl:
     HAS_NEW_EMAIL = "https://portal-service.nwpu.edu.cn/portalCenter/v2/personalData/getEmailDataNew"
     USER_INFO = "https://authx-service.nwpu.edu.cn/personal/api/v1/personal/me/user"
+    USER_INFO_ACCURATE = "https://authx-service.nwpu.edu.cn/personal/api/v1/personal/user/info"
     USER_PORTRAIT = "https://authx-service.nwpu.edu.cn/personal/api/v1/me/portrait"
     USER_PAPER = "https://ecampus.nwpu.edu.cn/portal-api/v2/personalData/getPaper"
     USER_CARD = "https://ecampus.nwpu.edu.cn/portal-api/v2/personalData/getMyECard"
@@ -17,6 +18,8 @@ class ECampusUrl:
     USER_BORROW_BOOKS = "https://ecampus.nwpu.edu.cn/portal-api/v2/personalData/getMyBooks"
     USER_PROPERTY = "https://ecampus.nwpu.edu.cn/portal-api/v2/personalData/getPropertyInfo"
     USER_EVENTS = "https://ecampus.nwpu.edu.cn/portal-api/v1/calendar/share/schedule/getEvents"
+    NEWS_FEED_COLUMN_LIST = "https://ecampus.nwpu.edu.cn/portal-api/v1/cms/Column/getColumnList"
+    NEWS_FEED_CONTENT = "https://ecampus.nwpu.edu.cn/portal-api/v3/cms/content/getColumncontents"
 
 class ECampusRequest:
     sess: ClientSession
@@ -54,6 +57,14 @@ class ECampusRequest:
         """
         resp = await self.sess.get(ECampusUrl.USER_INFO, headers=self.headers)
         return ECampusUserInfoResponse(**await resp.json())
+
+    async def get_user_info_accurate(self) -> ECampusUserInfoAccurateResponse:
+        """
+        Get user info accurate.
+        :return:
+        """
+        resp = await self.sess.get(ECampusUrl.USER_INFO_ACCURATE, headers=self.headers)
+        return ECampusUserInfoAccurateResponse(**await resp.json())
     
     async def get_user_portrait(self) -> bytes:
         """
@@ -118,3 +129,22 @@ class ECampusRequest:
                                    headers=self.headers,
                                    params=request.model_dump(by_alias=True)) # temporary hack
         return ECampusUserEventsResponse(**await resp.json())
+
+    async def get_news_feed_columns(self) -> ECampusNewsFeedColumnListResponse:
+        """
+        Get user news feed columns.
+        :return:
+        """
+        resp = await self.sess.get(ECampusUrl.NEWS_FEED_COLUMN_LIST,
+                                   headers=self.headers,)
+        return ECampusNewsFeedColumnListResponse(**await resp.json())
+
+    async def get_news_feed_content(self, request: ECampusNewsFeedContentRequest) -> ECampusNewsFeedContentResponse:
+        """
+        Get user news feed content.
+        :return:
+        """
+        resp = await self.sess.get(ECampusUrl.NEWS_FEED_CONTENT,
+                                   headers=self.headers,
+                                   params=request.model_dump(by_alias=True))
+        return ECampusNewsFeedContentResponse(**await resp.json())

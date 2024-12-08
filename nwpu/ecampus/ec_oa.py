@@ -52,9 +52,6 @@ class ECampusOaRequest:
     @staticmethod
     async def get_ecampus_token(sess: ClientSession) -> str:
         resp = await sess.get(ECampusOaUrl.REDIRECT, headers=DEFAULT_HEADER, allow_redirects=False)
-        if resp.status == 302:
-            print((await sess.get(resp.headers['Location'], headers=DEFAULT_HEADER, allow_redirects=False)).url)
-        print([x.url for x in resp.history])
         redirected: str = resp.headers['Location']
         if 'https://ecampus.nwpu.edu.cn' in redirected:
             parsed = urllib.parse.parse_qs(redirected)

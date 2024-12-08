@@ -6,6 +6,8 @@ from datetime import date, datetime
 
 from pydantic.main import IncEx
 
+from utils.common import BoolString
+
 
 class ECampusHasNewEmailRequest(BaseModel):
     """
@@ -100,9 +102,98 @@ class ECampusUserInfoAccurateRequest(BaseModel):
     """
     pass
 
+class ECampusUserInfoAccurateUserStats(BaseModel):
+    certificate_type_id: str = Field(alias='certificateTypeId')
+    birthday: str
+    country: Optional[str | Any] = Field(alias='country', default=None)
+    address: Optional[str | Any] = Field(alias='address', default=None)
+    gender: str
+    nation: str
+    gender_id: str = Field(alias='genderId')
+    nation_id: str = Field(alias='nationId')
+    country_id: Any = Field(alias='countryId')
+    address_id: Any = Field(alias='addressId')
+    all_address_info: Any = Field(alias='allAddressInfo')
+    full_name_spelling: str = Field(alias='fullNameSpelling')
+    uid: str
+    phone_number: Any = Field(alias='phoneNumber')
+    certificate_number: str = Field(alias='certificateNumber')
+    password_state: int = Field(alias='passwordState')
+    image_url: str = Field(alias='imageUrl')
+    name: str
+    id: str
+    default_account_name: Optional[str | Any] = Field(alias='defaultAccountName', default=None)
+    activation: int
+    name_spelling: str = Field(alias='nameSpelling')
+    email: Optional[str | Any] = Field(alias='email', default=None)
+    certificate_type: str = Field(alias='certificateType')
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
+class ECampusUserInfoAccurateAccount(BaseModel):
+    identity_type_code: str = Field(alias='identityTypeCode')
+    birthday: str
+    account_locked: Optional[bool | str | int | Any] = Field(alias='accountLocked', default=None)
+    organization_name: str = Field(alias='organizationName')
+    community_organizations: List = Field(alias='communityOrganizations')
+    account_name: str = Field(alias='accountName')
+    identity_type_name: str = Field(alias='identityTypeName')
+    account_expiry_date: Optional[str | Any] = Field(alias='accountExpiryDate', default=None)
+    user_name: str = Field(alias='userName')
+    is_data_center: int = Field(alias='isDataCenter')
+    user_id: str = Field(alias='userId')
+    part_time_organizations: Optional[List[Any]] = Field(alias='partTimeOrganizations')
+    labels: Optional[List[Any]]
+    organization_id: str = Field(alias='organizationId')
+    organization_code: str = Field(alias='organizationCode')
+    identity_type_id: str = Field(alias='identityTypeId')
+    id: str
+    state: str
+    activation: int
+    user_uid: str = Field(alias='userUid')
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
+class ECampusUserInfoAccurateSecurity(BaseModel):
+    security_level: int = Field(alias='securityLevel')
+    mobile_bound: bool = Field(alias='mobileBinded')
+    email_address_bound: bool = Field(alias='emailAddressBinded')
+    question_bound: bool = Field(alias='questionBinded')
+    mobile: str
+    email_address: str = Field(alias='emailAddress')
+    question1: Optional[str | Any] = Field(alias='question1')
+    question2: Optional[str | Any] = Field(alias='question2')
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
+class ECampusUserInfoAccurateData(BaseModel):
+    user: Optional[ECampusUserInfoAccurateUserStats] = Field(default=None)
+    accounts: Optional[List[ECampusUserInfoAccurateAccount]] = Field(default=None)
+    user_security: Optional[ECampusUserInfoAccurateSecurity] = Field(alias='userSecurity', default=None)
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
 class ECampusUserInfoAccurateResponse(BaseModel):
-    # todo
-    pass
+    acknowledged: bool = Field(alias='acknowleged', default=True)
+    code: int
+    message: Optional[str] = Field(default='')
+    data: Optional[ECampusUserInfoAccurateData] = Field(default=None)
+    
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
 
 class ECampusUserPapersRequest(BaseModel):
     """
@@ -281,6 +372,8 @@ class ECampusUserPropertyResponse(BaseModel):
 
 class ECampusUserEventsMode(str, Enum):
     date_view = "DateView"
+    week_view = "WeekView"
+    month_view = "MonthView"
 
 class ECampusUserEventsRequest(BaseModel):
     """
@@ -406,3 +499,149 @@ class ECampusUserEventsResponse(BaseModel):
 
     class Config:
         populate_by_name = True
+
+
+class ECampusNewsFeedColumnListRequest(BaseModel):
+    """
+    GET
+    https://ecampus.nwpu.edu.cn/portal-api/v1/cms/Column/getColumnList
+    """
+    pass
+
+class ECampusNewsFeedColumn(BaseModel):
+    id: str
+    column_name: str = Field(alias='columnName')
+    column_code: str = Field(alias='columnCode')
+    p_id: Optional[str] = Field(alias='pId')
+    column_url: Optional[str | Any] = Field(alias='columnUrl', default=None)
+    flow_id: Optional[str] = Field(alias='flowId')
+    sort: int
+    create_time: Optional[str] = Field(alias='createTime')
+    update_time: Optional[str] = Field(alias='updateTime')
+    column_level: int = Field(alias='columnLevel')
+    rss: Optional[bool]
+    create_user_code: Optional[str] = Field(alias='createUserCode')
+    update_user_code: Optional[str] = Field(alias='updateUserCode')
+    public_access: Optional[str] = Field(alias='publicAccess')
+    column_desc: Optional[str | Any] = Field(alias='columnDesc', default=None)
+    release_address: Optional[str] = Field(alias='releaseAddress')
+    link: Optional[str | Any] = Field(alias='link', default=None)
+    zl_sort: Optional[str | Any] = Field(alias='zlSort', default=None)
+    display_way: Optional[str | Any] = Field(alias='displayWay', default=None)
+    view_departments: Optional[str | Any] = Field(alias='viewDepts', default=None)
+    view_groups: Optional[str | Any] = Field(alias='viewGroups', default=None)
+    view_roles: Optional[str | Any] = Field(alias='viewRoles', default=None)
+    p_column_name: Optional[str | Any] = Field(alias='pcolumnName', default=None)
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
+class ECampusNewsFeedColumnListResponse(BaseModel):
+    code: int
+    message: Optional[str] = Field(default=None)
+    data: Optional[List[ECampusNewsFeedColumn]] = Field(default=None)
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
+class ECampusNewsFeedContentRequest(BaseModel):
+    """
+    GET
+    https://ecampus.nwpu.edu.cn/portal-api/v3/cms/content/getColumncontents?
+    GET params
+    """
+    kw: str = Field(default='')
+    column_id: str = Field(alias='columnId')
+    page_number: int = Field(alias='pageNo', default=1)
+    page_size: int = Field(alias='pageSize', default=30)
+    load_content: str = Field(alias='loadContent', default=BoolString.false.value)
+    load_picture_contents: str = Field(alias='loadPicContents', default=BoolString.false.value)
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+        
+
+class ECampusNewsFeedContentItem(BaseModel):
+    id: str
+    column_id: str = Field(alias='columnId')
+    release_user: Optional[str | Any] = Field(alias='releaseUser', default=None)
+    release_start_time: Optional[str | datetime | Any] = Field(alias='releaseStartTime', default=None)
+    release_end_time: Optional[str | datetime | Any] = Field(alias='releaseEndTime', default=None)
+    top_status: str = Field(alias='topStatus')
+    top_time: Optional[str] = Field(alias='topTime')
+    title: str
+    title_image: Optional[str] = Field(alias='titleImage')
+    content: Optional[str | Any] = Field(alias='content', default=None)
+    create_time: str = Field(alias='createTime')
+    update_time: str = Field(alias='updateTime')
+    release_dept_name: str = Field(alias='releaseDeptName')
+    read_count: int = Field(alias='readCount')
+    public_access: str = Field(alias='publicAccess')
+    content_desc: str = Field(alias='contentDesc')
+    force_read: Optional[str | Any] = Field(alias='forceRead', default=None)
+    column_name: str = Field(alias='columnName')
+    file_link: Optional[str | Any] = Field(alias='fileLink', default=None)
+    telephone: Optional[str | Any] = Field(alias='telephone')
+    author: Optional[str | Any] = Field(alias='author')
+    picture_author: Optional[str | Any] = Field(alias='pictureAuthor')
+    review_people: Optional[str | Any] = Field(alias='reviewPeople')
+    red_title: Optional[str | Any] = Field(alias='redTitle')
+    number_title: Optional[str | Any] = Field(alias='numberTitle')
+    title_file: Optional[str | Any] = Field(alias='titleFile')
+    release_file_year: Optional[str | Any] = Field(alias='releaseFileYear')
+    thumb_count: int = Field(alias='thumbCount')
+    release_status: str = Field(alias='releaseStatus')
+    review_status: Optional[str | Any] = Field(alias='reviewStatus')
+    review_advice: Optional[str | Any] = Field(alias='reviewAdvice')
+    top_continue: Optional[str | Any] = Field(alias='topContinue')
+    template: Optional[str | Any] = Field(alias='template', default=None)
+    process_instance_id: Any = Field(alias='processInstanceId')
+    release_dept_code: str = Field(alias='releaseDeptCode')
+    ffid: Optional[str | Any]
+    pv: Optional[str | Any]
+    url: Optional[str | Any]
+    inherit: str
+    lk_dept: Optional[str | Any] = Field(alias='lkDept')
+    lk_time: Optional[str | Any] = Field(alias='lkTime')
+    create_user_code: Optional[str | Any] = Field(alias='createUserCode')
+    release_user_code: Optional[str | Any] = Field(alias='releaseUserCode')
+    old_id: Optional[str | Any] = Field(alias='oldId')
+    top_end_time: Optional[str | Any] = Field(alias='topEndTime')
+    form_title_image: Optional[str | Any] = Field(alias='formTitleImage')
+    is_notice: Optional[str | Any] = Field(alias='isNotice')
+    catalog_id: Optional[str | Any] = Field(alias='catalogId')
+    catalog_name: Optional[str | Any] = Field(alias='catalogName')
+    content_files: Optional[str | Any] = Field(alias='contentFiles')
+    title_image_list: Optional[str | Any] = Field(alias='titleImageList')
+    form_content_id: Optional[str | Any] = Field(alias='formContentId')
+    collect: str
+    news_type: Optional[str | Any] = Field(alias='newsType')
+    external_news_url: Optional[str | Any] = Field(alias='externalNewsUrl')
+    release_area: Optional[str | Any] = Field(alias='releaseArea')
+    thumb: Optional[str | Any]
+    read: str
+    release: Optional[str | Any]
+    view_groups: Optional[str | Any] = Field(alias='viewGroups')
+    view_depts: Optional[str | Any] = Field(alias='viewDepts')
+    view_roles: Optional[str | Any] = Field(alias='viewRoles')
+    file_list: Optional[str | Any] = Field(alias='fileList')
+    column_pid: Optional[str | Any] = Field(alias='columnPid')
+    collect_time: Optional[str | Any] = Field(alias='collectTime')
+    row_num: Optional[str | int | Any] = Field(alias='rownum_')
+
+
+class ECampusNewsFeedContentData(BaseModel):
+    all_contents: Optional[List[ECampusNewsFeedContentItem | Any]] = Field(alias='allContents', default=None)
+    count: int
+    pic_contents: Optional[List] | Any = Field(alias='picContents', default=None)
+
+
+class ECampusNewsFeedContentResponse(BaseModel):
+    code: int
+    message: Any
+    data: Optional[ECampusNewsFeedContentData] | Any = Field(default=None)
