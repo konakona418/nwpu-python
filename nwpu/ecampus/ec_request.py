@@ -21,6 +21,9 @@ class ECampusUrl:
     USER_EVENTS = "https://ecampus.nwpu.edu.cn/portal-api/v1/calendar/share/schedule/getEvents"
     NEWS_FEED_COLUMN_LIST = "https://ecampus.nwpu.edu.cn/portal-api/v1/cms/Column/getColumnList"
     NEWS_FEED_CONTENT = "https://ecampus.nwpu.edu.cn/portal-api/v3/cms/content/getColumncontents"
+    USER_EVENT_CALENDAR = "https://ecampus.nwpu.edu.cn/portal-api/v1/calendar/share/schedule/getPersonlCalendar"
+    USER_EVENT_CREATE = "https://ecampus.nwpu.edu.cn/portal-api/v1/calendar/share/schedule/save"
+    USER_EVENT_DELETE = "https://ecampus.nwpu.edu.cn/portal-api/v1/calendar/share/schedule/deleteSchedule"
 
 class ECampusRequest:
     sess: ClientSession
@@ -140,6 +143,35 @@ class ECampusRequest:
                                    headers=self.headers,
                                    params=request.model_dump(by_alias=True)) # temporary hack
         return ECampusUserEventsResponse(**await resp.json())
+
+    async def get_user_event_calendars(self) -> ECampusUserEventCalendarResponse:
+        """
+        Get user events.
+        :return:
+        """
+        resp = await self.sess.get(ECampusUrl.USER_EVENT_CALENDAR,
+                                   headers=self.headers,)
+        return ECampusUserEventCalendarResponse(**await resp.json())
+
+    async def add_user_event(self, request: ECampusAddUserEventRequest) -> ECampusAddUserEventResponse:
+        """
+        Add user event.
+        :return:
+        """
+        resp = await self.sess.post(ECampusUrl.USER_EVENT_CREATE,
+                                   headers=self.headers,
+                                   json=request.model_dump(by_alias=True))
+        return ECampusAddUserEventResponse(**await resp.json())
+
+    async def delete_user_event(self, request: ECampusDeleteUserEventRequest) -> ECampusDeleteUserEventResponse:
+        """
+        Delete user event.
+        :return:
+        """
+        resp = await self.sess.post(ECampusUrl.USER_EVENT_DELETE,
+                                   headers=self.headers,
+                                   data=request.model_dump(by_alias=True))
+        return ECampusDeleteUserEventResponse(**await resp.json())
 
     async def get_news_feed_columns(self) -> ECampusNewsFeedColumnListResponse:
         """

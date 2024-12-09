@@ -1,12 +1,12 @@
+from datetime import date, datetime
 from enum import Enum
-from typing import Optional, List, Dict, Any, Literal
+from typing import Optional, List, Dict, Any
 
 from pydantic import BaseModel, Field
-from datetime import date, datetime
-
-from pydantic.main import IncEx
 
 from utils.common import BoolString
+
+USER_EVENT_TZ_NAME = "GMT+8:00 - 中国标准时间"
 
 
 class ECampusHasNewEmailRequest(BaseModel):
@@ -281,25 +281,10 @@ class ECampusUserConsumptionHistoryRequest(BaseModel):
     page_index: int = Field(alias='pageIndex', default=0)
     random_number: int = Field(alias='random_number', default=0)
 
-    def model_dump(
-        self,
-        *,
-        mode: Literal['json', 'python'] | str = 'python',
-        include: IncEx | None = None,
-        exclude: IncEx | None = None,
-        context: Any | None = None,
-        by_alias: bool = False,
-        exclude_unset: bool = False,
-        exclude_defaults: bool = False,
-        exclude_none: bool = False,
-        round_trip: bool = False,
-        warnings: bool | Literal['none', 'warn', 'error'] = True,
-        serialize_as_any: bool = False,
-    ) -> dict[str, Any]:
-        dumped = super().model_dump(mode=mode, include=include, exclude=exclude, context=context, by_alias=by_alias,
-                                    exclude_unset=exclude_unset, exclude_defaults=exclude_defaults,
-                                    exclude_none=exclude_none, round_trip=round_trip, warnings=warnings,
-                                    serialize_as_any=serialize_as_any)
+    def model_dump(self, **kwargs) -> dict[str, Any]:
+        kwargs['by_alias'] = True
+        dumped = super().model_dump(**kwargs)
+
         dumped['beginTime'] = dumped['beginTime'].strftime("%Y-%m-%d")
         dumped['endTime'] = dumped['endTime'].strftime("%Y-%m-%d")
         dumped['timeRange'] = dumped['timeRange'].value \
@@ -485,34 +470,10 @@ class ECampusUserEventsRequest(BaseModel):
     mode: ECampusUserEventsMode = Field(alias="reqType", default=ECampusUserEventsMode.date_view)
     random_number: str | int | None = Field(alias="randomNumber", default=0)
 
-    def model_dump(
-        self,
-        *,
-        mode: Literal['json', 'python'] | str = 'python',
-        include: IncEx | None = None,
-        exclude: IncEx | None = None,
-        context: Any | None = None,
-        by_alias: bool = False,
-        exclude_unset: bool = False,
-        exclude_defaults: bool = False,
-        exclude_none: bool = False,
-        round_trip: bool = False,
-        warnings: bool | Literal['none', 'warn', 'error'] = True,
-        serialize_as_any: bool = False,
-    ) -> dict[str, Any]:
-        dumped = super().model_dump(
-            mode=mode,
-            include=include,
-            exclude=exclude,
-            context=context,
-            by_alias=by_alias,
-            exclude_unset=exclude_unset,
-            exclude_defaults=exclude_defaults,
-            exclude_none=exclude_none,
-            round_trip=round_trip,
-            warnings=warnings,
-            serialize_as_any=serialize_as_any,
-        )
+    def model_dump(self, **kwargs) -> dict[str, Any]:
+        kwargs['by_alias'] = True
+        dumped = super().model_dump(**kwargs)
+
         dumped["startDate"] = dumped["startDate"].strftime("%Y-%m-%d")
         dumped["endDate"] = dumped["endDate"].strftime("%Y-%m-%d")
         dumped["reqType"] = ECampusUserEventsMode(dumped["reqType"]).value
@@ -598,6 +559,207 @@ class ECampusUserEventsResponse(BaseModel):
 
     class Config:
         populate_by_name = True
+
+class ECampusUserEventCalendarRequest(BaseModel):
+    """
+    GET
+    https://ecampus.nwpu.edu.cn/portal-api/v1/calendar/share/schedule/getPersonlCalendar
+    """
+    pass
+
+class ECampusUserEventCalendarItem(BaseModel):
+    id: str
+    name: str
+    color: str
+    create_time: str | Any = Field(alias='createTime', default=None)
+    update_time: str | Any = Field(alias='updateTime', default=None)
+    create_user_name: str = Field(alias='createUserName', default=None)
+    depart: Any = Field(alias='depart', default=None)
+    depart_name: Any = Field(alias='departName', default=None)
+    is_subscribed: Any = Field(alias='isSubscribed', default=None)
+    is_force_subscribed: Any = Field(alias='isForceSubscribed', default=None)
+    create_user_id: Any = Field(alias='createUserId', default=None)
+    update_user_entity: Any = Field(alias='updateUserEntity', default=None)
+    remark: Any = Field(alias='remark', default=None)
+    create_time_str: Any = Field(alias='createTimeStr', default=None)
+    cu_color: Any = Field(alias='cucolor', default=None)
+    department_name: Any = Field(alias='depaptmentName', default=None)
+    create_user_code: str = Field(alias='createUserCode', default=None)
+    update_user_code: Any = Field(alias='updateUserCode', default=None)
+    display_status: str = Field(alias='displayStatus', default=None)
+    subscription_status: Any = Field(alias='subscriptionStatus', default=None)
+    department_ids: Any = Field(alias='departmentIds', default=None)
+    role_ids: Any = Field(alias='roleIds', default=None)
+    group_ids: Any = Field(alias='groupIds', default=None)
+    calendar_type: int = Field(alias='calendarType', default=None)
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
+class ECampusUserEventCalendarResponse(BaseModel):
+    code: int
+    message: Optional[str] = Field(default=None)
+    data: Optional[List[ECampusUserEventCalendarItem]] = Field(default=None)
+    
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+class ECampusUserEventRepeatType(str, Enum):
+    no_repeat = "01"
+    daily = "02"
+    weekly = "03"
+    workday = "04"
+    weekend = "05"
+    custom = "06"
+
+class ECampusUserEventIsWholeDay(str, Enum):
+    no = "0"
+    yes = "1"
+
+class ECampusUserEventCycleType(str, Enum):
+    daily = "1"
+    weekly = "2"
+    monthly = "3"
+    yearly = "4"
+
+class ECampusUserEventRepeatEndType(str, Enum):
+    no_end = "1"
+    after_n_times = "2"
+    on_date = "3"
+
+class ECampusUserEventRemindType(str, Enum):
+    no_remind = "0"
+    when_begin = "1"
+    five_minutes_ahead = "2"
+    one_quarter_ahead = "3"
+    half_hour_ahead = "4"
+    one_hour_ahead = "5"
+    one_day_ahead = "6"
+
+
+class ECampusAddUserEventRequest(BaseModel):
+    """
+    POST
+    https://ecampus.nwpu.edu.cn/portal-api/v1/calendar/share/schedule/save
+    POST json data
+    """
+    timezone: str = Field(alias='timezone', default=USER_EVENT_TZ_NAME)
+    repeat_type: ECampusUserEventRepeatType = Field(alias='repeatType', default=ECampusUserEventRepeatType.no_repeat)
+    is_whole_day: ECampusUserEventIsWholeDay = Field(alias='isWholeDay', default=ECampusUserEventIsWholeDay.no)
+    address: str = Field(default="")
+
+    # the description of the event
+    remark: str = Field(default="")
+
+    # note that this field should match 'repeat_type' (if the repeat_type.value == Literal['daily', 'weekly', 'monthly', 'yearly'])
+    repeat_cycle_type: ECampusUserEventCycleType = Field(alias='repeatCycleType', default=ECampusUserEventCycleType.weekly)
+
+    # maximum number of repetition cycles.
+    # usually this param is available when repeat_type.value == Literal['custom']
+    # for instance, when repeat_cycle_type is 'weekly', and this field is set to 12,
+    # then the event will only be available for 12 weeks.
+    repeat_cycle_count: str = Field(alias='repeatCycleCount', default="1")
+
+    # this field should match 'repeat_end_type'
+    # when the repeat_end_type.value == Literal['after_n_times'], this field should be a number->str, for instance, '12';
+    # when the repeat_end_type.value == Literal['on_date'], this field should be a date(YYYY-mm-dd HH:MM:SS)->str, for instance, '2024-01-01 00:00:00';
+    # when the repeat_end_type.value == Literal['no_end'], this field should be an empty string.
+    repeat_end_params: str = Field(alias='repeatEndType', default="")
+    repeat_end_type: ECampusUserEventRepeatEndType = Field(alias='repeatEndRadio', default=ECampusUserEventRepeatEndType.no_end)
+    remind_type: ECampusUserEventRemindType = Field(alias='remindDate', default=ECampusUserEventRemindType.no_remind)
+
+    start_date: datetime = Field(alias='startDate', default=datetime.now())
+    end_date: datetime = Field(alias='endDate', default=datetime.now())
+
+    # the name of the event
+    title: str
+
+    # unknown
+    schedule_type: str = Field(alias='scheduleType', default="1")
+    calendar_id: str = Field(alias='calendarId')
+
+    def model_dump(self, **kwargs) -> dict:
+        kwargs['by_alias'] = True
+        dumped = super().model_dump(**kwargs)
+
+        dumped['startDate'] = dumped['startDate'].strftime("%Y-%m-%d %H:%M:%S")
+        dumped['endDate'] = dumped['endDate'].strftime("%Y-%m-%d %H:%M:%S")
+
+        dumped['repeatType'] = dumped['repeatType'].value
+        dumped['isWholeDay'] = dumped['isWholeDay'].value
+        dumped['repeatCycleType'] = dumped['repeatCycleType'].value
+        dumped['repeatEndType'] = dumped['repeatEndType']
+        dumped['remindDate'] = dumped['remindDate'].value
+
+        return dumped
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+        json_encoders = {
+            datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S"),
+            date: lambda v: v.strftime("%Y-%m-%d"),
+
+            ECampusUserEventRepeatType: lambda v: v.value,
+            ECampusUserEventIsWholeDay: lambda v: v.value,
+            ECampusUserEventCycleType: lambda v: v.value,
+            ECampusUserEventRepeatEndType: lambda v: v.value,
+            ECampusUserEventRemindType: lambda v: v.value
+        }
+
+class ECampusAddUserEventResponse(BaseModel):
+    code: int
+    message: Optional[str] | Any = Field(default=None)
+    data: Optional[str] | Any # the id of the event
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+class ECampusDeleteUserEventType(int, Enum):
+    remove_all = 1
+    remove_after_date = 2
+    remove_once = 3
+
+class ECampusDeleteUserEventRequest(BaseModel):
+    """
+    POST
+    https://ecampus.nwpu.edu.cn/portal-api/v1/calendar/share/schedule/deleteSchedule
+    url params
+    """
+    schedule_id: str = Field(alias='scheduleId')
+    schedule_date: date = Field(alias='scheduleDate')
+    data_change_type: ECampusDeleteUserEventType = Field(alias='dataChangeType', default=ECampusDeleteUserEventType.remove_all)
+
+    def model_dump(self, **kwargs) -> dict:
+        kwargs['by_alias'] = True
+        dumped = super().model_dump(**kwargs)
+
+        dumped['scheduleDate'] = dumped['scheduleDate'].strftime("%Y-%m-%d")
+        dumped['dataChangeType'] = dumped['dataChangeType'].value
+        return dumped
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+        json_encoders = {
+            date: lambda v: v.strftime("%Y-%m-%d"),
+            ECampusDeleteUserEventType: lambda v: v.value
+        }
+
+class ECampusDeleteUserEventResponse(BaseModel):
+    code: int
+    message: Optional[str] | Any = Field(default=None)
+    data: Optional[str] | Any = Field(default=None)
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
 
 
 class ECampusNewsFeedColumnListRequest(BaseModel):
