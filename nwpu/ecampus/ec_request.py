@@ -43,7 +43,7 @@ class ECampusRequest:
         :return:
         """
         token = await ECampusOaRequest.get_ecampus_token(self.sess)
-        self.sess.headers['X-Token'] = token
+        self.sess.headers['X-Id-Token'] = token
         return token
     
     async def get_new_email(self) -> ECampusHasNewEmailResponse:
