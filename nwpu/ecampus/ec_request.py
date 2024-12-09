@@ -75,7 +75,7 @@ class ECampusRequest:
         Get user portrait.
         :return:
         """
-        req = ECampusUserPortraitRequest(x_token=self.sess.headers['X-Token'],
+        req = ECampusUserPortraitRequest(x_token=self.sess.headers['X-Id-Token'],
             random_number=random.randint(100, 999))
         resp = await self.sess.get(ECampusUrl.USER_PORTRAIT, 
                                    headers=self.headers, 
