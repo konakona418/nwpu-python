@@ -17,5 +17,5 @@ class IdleClassroomOaRequest:
         redirects = [x.url for x in resp.history]
         redirects.append(resp.url)
         print(redirects)
-        if 'https://idle-classroom.nwpu.edu.cn/ui/leisureClassroom' in redirects[-1].host:
+        if 'idle-classroom.nwpu.edu.cn' in redirects[-1].host:
             return redirects[-1].query['token']
