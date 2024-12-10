@@ -13,6 +13,10 @@ class ECampusOaUrl:
 
 class ECampusOaRequest:
     @staticmethod
+    def get_redirect_url() -> str:
+        return ECampusOaUrl.REDIRECT.split('?', 1)[1].removeprefix('service=')
+
+    @staticmethod
     def parse_token_from_ticket(ticket: str) -> str:
         """
         see: https://ecampus.nwpu.edu.cn//js/8451.e5865a44.js
@@ -50,7 +54,7 @@ class ECampusOaRequest:
         return json_data['idToken']
 
     @staticmethod
-    async def get_ecampus_token(sess: ClientSession) -> str:
+    async def authorize_and_extract_token(sess: ClientSession) -> str:
         resp = await sess.get(ECampusOaUrl.REDIRECT, headers=DEFAULT_HEADER, allow_redirects=False)
         redirected: str = resp.headers['Location']
         if 'https://ecampus.nwpu.edu.cn' in redirected:

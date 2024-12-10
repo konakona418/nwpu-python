@@ -1,4 +1,5 @@
 import base64
+import datetime
 import hashlib
 import json
 import random
@@ -39,6 +40,18 @@ class StringArgsBuilder:
             result += f"{key}={value}"
         return result
 
+def concat_url(url1: str, url2: str) -> str:
+    if url1.endswith('/'):
+        url1 = url1[:-1]
+    if url2.startswith('/'):
+        url2 = url2[1:]
+    return f"{url1}/{url2}"
+
+def datetime_from_timestamp(ts_mills: int) -> datetime.datetime:
+    return datetime.datetime.fromtimestamp(ts_mills / 1000)
+
+def date_from_timestamp(ts_mills: int) -> datetime.date:
+    return datetime.date.fromtimestamp(ts_mills / 1000)
 
 def generate_fake_browser_fingerprint() -> tuple[str, Dict[str, str]]:
     user_agents = [

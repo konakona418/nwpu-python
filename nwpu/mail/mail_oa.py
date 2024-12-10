@@ -50,6 +50,12 @@ class MailOaRequest:
             cookie = resp.cookies.get('SESSION')
             return cookie.value
 
+    @staticmethod
+    async def authorize(session: ClientSession):
+        async with session.get(MailOaUrl.MAIL_OA_LOCAL, allow_redirects=True, headers=DEFAULT_HEADER) as resp:
+            return extract_sid(session)
+
+
 def extract_sid(sess: ClientSession) -> str:
     """
     Extract sid from cookie.

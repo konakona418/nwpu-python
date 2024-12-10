@@ -42,7 +42,7 @@ class ECampusRequest:
         :param sess:
         :return:
         """
-        token = await ECampusOaRequest.get_ecampus_token(self.sess)
+        token = await ECampusOaRequest.authorize_and_extract_token(self.sess)
         self.sess.headers['X-Id-Token'] = token
         return token
     

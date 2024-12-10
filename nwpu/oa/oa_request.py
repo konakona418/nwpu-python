@@ -41,7 +41,7 @@ class OaRequest:
         :return: True if the session is not configured, otherwise False.
         """
         resp = await self.sess.get(
-            OaRequestUrl.OA_LOGIN + ('?service=' + redirect_url) if redirect_url != '' else '',
+            OaRequestUrl.OA_LOGIN + (('?service=' + redirect_url) if redirect_url != '' else ''),
             headers=DEFAULT_HEADER,
             allow_redirects=True)
         # if the user has not logged in.
@@ -127,7 +127,7 @@ class OaRequest:
 
         return redirects
 
-    async def finish_password_login(self, form_data: PasswordLoginFormRequest, redirect_url: str) -> list[URL]:
+    async def finish_password_login(self, form_data: PasswordLoginFormRequest, redirect_url: str = '') -> list[URL]:
         """
         Finish the password login. Auto-redirects to the target application.
         :param redirect_url:
@@ -141,7 +141,7 @@ class OaRequest:
         data = form_data.model_dump(by_alias=True)
 
         resp = await self.sess.post(
-            OaRequestUrl.OA_LOGIN + ('?service=' + redirect_url) if redirect_url != '' else '',
+            OaRequestUrl.OA_LOGIN + (('?service=' + redirect_url) if redirect_url != '' else ''),
             headers=DEFAULT_HEADER,
             allow_redirects=True,
             data=data)
