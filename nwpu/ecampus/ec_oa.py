@@ -54,7 +54,7 @@ class ECampusOaRequest:
         return json_data['idToken']
 
     @staticmethod
-    async def authorize_and_extract_token(sess: ClientSession) -> str:
+    async def authorize(sess: ClientSession) -> str:
         resp = await sess.get(ECampusOaUrl.REDIRECT, headers=DEFAULT_HEADER, allow_redirects=False)
         redirected: str = resp.headers['Location']
         if 'https://ecampus.nwpu.edu.cn' in redirected:

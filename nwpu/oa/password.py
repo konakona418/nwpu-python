@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from nwpu.utils.parse import generate_fake_browser_fingerprint
 
 
-class LoginMfaFormRequest(BaseModel):
+class CheckMfaRequiredRequest(BaseModel):
     """
     POST
     https://uis.nwpu.edu.cn/cas/mfa/detect

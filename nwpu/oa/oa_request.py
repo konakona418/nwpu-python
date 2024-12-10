@@ -6,10 +6,11 @@ from yarl import URL
 
 from nwpu.oa.mfa import CheckMfaRequiredResponse, MfaVerifyMethod, MfaInitResponse, MfaSendAppPushResponse, \
     MfaCheckAppPushStatusResponse, MfaSendSmsResponse, MfaVerifySmsResponse, MfaVerifyMailResponse, MfaSendMailResponse
-from nwpu.oa.password import LoginMfaFormRequest, PasswordLoginFormRequest
+from nwpu.oa.password import CheckMfaRequiredRequest, PasswordLoginFormRequest
 from nwpu.oa.qrcode import QrInitResponse, QrLoginFormRequest, QrCometResponse
 from nwpu.utils.common import DEFAULT_HEADER, timestamp_mill
 from nwpu.utils.parse import StringArgsBuilder, find_tracer_id
+from oa.dyncode import SmsLoginSendCodeRequest, SmsLoginSendCodeResponse, SmsLoginFormRequest
 
 
 class OaRequestUrl:
@@ -18,6 +19,7 @@ class OaRequestUrl:
     OA_QR_INIT = 'https://uis.nwpu.edu.cn/cas/qr/init'
     OA_QR_IMAGE = 'https://uis.nwpu.edu.cn/cas/qr/qrcode'
     OA_QR_COMET = 'https://uis.nwpu.edu.cn/cas/qr/comet'
+    OA_SMS_SEND = 'https://uis.nwpu.edu.cn/cas/passwordlessTokenSend'
     OA_LOGIN = 'https://uis.nwpu.edu.cn/cas/login'
     OA_PWD_DETECT = 'https://uis.nwpu.edu.cn/cas/mfa/detect'
 
@@ -88,7 +90,7 @@ class OaRequest:
         resp = await self.sess.post(OaRequestUrl.OA_QR_COMET, headers=DEFAULT_HEADER)
         return QrCometResponse(**await resp.json())
 
-    async def password_init(self, form_data: LoginMfaFormRequest) -> CheckMfaRequiredResponse:
+    async def password_init(self, form_data: CheckMfaRequiredRequest) -> CheckMfaRequiredResponse:
         """
         Checks the mfa state. If the data.mfa_required == True, the user should go through the mfa process.
         :param form_data:
@@ -101,6 +103,20 @@ class OaRequest:
             data=data,
         )
         return CheckMfaRequiredResponse(**await resp.json())
+
+    async def sms_init(self, req: SmsLoginSendCodeRequest) -> SmsLoginSendCodeResponse:
+        """
+        sends the verification code via sms.
+        :param req:
+        :return:
+        """
+        data = req.model_dump(by_alias=True)
+        resp = await self.sess.post(
+            OaRequestUrl.OA_SMS_SEND,
+            headers=DEFAULT_HEADER,
+            data=data,)
+        return SmsLoginSendCodeResponse(**await resp.json())
+
 
     async def finish_qr_login(self, form_data: QrLoginFormRequest, redirect_url ='') -> list[URL]:
         """
@@ -137,6 +153,22 @@ class OaRequest:
         redirects = list()
         if self.tracer_id != '':
             #print('tracer_id: ' + self.tracer_id)
+            form_data.execution = self.tracer_id
+        data = form_data.model_dump(by_alias=True)
+
+        resp = await self.sess.post(
+            OaRequestUrl.OA_LOGIN + (('?service=' + redirect_url) if redirect_url != '' else ''),
+            headers=DEFAULT_HEADER,
+            allow_redirects=True,
+            data=data)
+
+        for i in resp.history:
+            redirects.append(i.url)
+        return redirects
+
+    async def finish_sms_login(self, form_data: SmsLoginFormRequest, redirect_url: str = '') -> list[URL]:
+        redirects = list()
+        if self.tracer_id != '':
             form_data.execution = self.tracer_id
         data = form_data.model_dump(by_alias=True)
 

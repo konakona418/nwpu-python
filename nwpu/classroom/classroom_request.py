@@ -27,9 +27,11 @@ class IdleClassroomRequest:
 
         if x_token:
             self.headers['X-Id-Token'] = x_token
+        else:
+            raise ValueError("X-Id-Token is required.")
 
     async def get_token(self) -> str:
-        token = await IdleClassroomOaRequest.authorize_and_get_token(self.sess)
+        token = await IdleClassroomOaRequest.authorize(self.sess)
         self.headers['X-Id-Token'] = token
         return token
 
