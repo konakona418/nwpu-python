@@ -1,6 +1,6 @@
 from aiohttp import ClientSession
 
-from market.market_oa import MarketOaRequest
+from nwpu.market.market_oa import MarketOaRequest
 from nwpu.market.market_struct import *
 from nwpu.utils.parse import concat_url
 from nwpu.utils.common import DEFAULT_HEADER
