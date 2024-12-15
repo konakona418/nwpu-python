@@ -314,7 +314,7 @@ class MarketItemListRecord(BaseModel):
     origin_price: str = Field(alias='originPrice')
     publish_price: str = Field(alias='publishPrice')
     status: int
-    view_count: Optional[int] = Field(alias='viewCount', default=None)
+    view_count: int = Field(alias='viewCount')
     del_status: Any = Field(alias='delStatus')
     create_time: int = Field(alias='createTime')
     transaction_time: Any = Field(alias='transactionTime')
@@ -348,7 +348,7 @@ class MarketItemListRecord(BaseModel):
 
 
 class MarketItemListData(BaseModel):
-    records: List[MarketItemListRecord] = Field(default=None)
+    records: List[MarketItemListRecord] | Any = Field(default=None)
     total: int
     size: int
     current: int
@@ -367,7 +367,7 @@ class MarketItemListResponse(BaseModel):
     success: bool
     code: int
     msg: str
-    data: Optional[MarketItemListData] = Field(default=None)
+    data: Optional[MarketItemListData] | Any = Field(default=None)
 
     class Config:
         arbitrary_types_allowed = True
@@ -465,8 +465,8 @@ class MarketItemDetailData(BaseModel):
     origin_price: str = Field(alias='originPrice')
     publish_price: str = Field(alias='publishPrice')
     status: int
-    view_count: Optional[int] = Field(alias='viewCount', default=None)
-    del_status: Optional[int] = Field(alias='delStatus', default=None)
+    view_count: int = Field(alias='viewCount')
+    del_status: int = Field(alias='delStatus')
     create_time: int = Field(alias='createTime')
     transaction_time: Any = Field(alias='transactionTime')
     publish_time: int = Field(alias='publishTime')
