@@ -314,7 +314,7 @@ class MarketItemListRecord(BaseModel):
     origin_price: str = Field(alias='originPrice')
     publish_price: str = Field(alias='publishPrice')
     status: int
-    view_count: int = Field(alias='viewCount')
+    view_count: Optional[int] = Field(alias='viewCount', default=0)
     del_status: Any = Field(alias='delStatus')
     create_time: int = Field(alias='createTime')
     transaction_time: Any = Field(alias='transactionTime')
@@ -465,7 +465,7 @@ class MarketItemDetailData(BaseModel):
     origin_price: str = Field(alias='originPrice')
     publish_price: str = Field(alias='publishPrice')
     status: int
-    view_count: int = Field(alias='viewCount')
+    view_count: Optional[int] = Field(alias='viewCount', default=0)
     del_status: int = Field(alias='delStatus')
     create_time: int = Field(alias='createTime')
     transaction_time: Any = Field(alias='transactionTime')
