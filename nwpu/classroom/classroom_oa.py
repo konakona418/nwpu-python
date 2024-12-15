@@ -12,10 +12,10 @@ class IdleClassroomOaRequest:
         return IdleClassroomOaUrl.OA_URL.split('?', 1)[1].removeprefix('service=')
 
     @staticmethod
-    async def authorize_and_get_token(sess: ClientSession) -> str:
+    async def authorize(sess: ClientSession) -> str:
         resp = await sess.get(IdleClassroomOaUrl.OA_URL, allow_redirects=True, headers=DEFAULT_HEADER)
         redirects = [x.url for x in resp.history]
         redirects.append(resp.url)
         print(redirects)
-        if 'https://idle-classroom.nwpu.edu.cn/ui/leisureClassroom' in redirects[-1].host:
+        if 'idle-classroom.nwpu.edu.cn' in redirects[-1].host:
             return redirects[-1].query['token']
