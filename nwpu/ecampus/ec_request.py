@@ -34,15 +34,17 @@ class ECampusRequest:
 
         if x_token:
             self.sess.headers['X-Id-Token'] = x_token
+        else:
+            raise ValueError("X-Id-Token is required.")
 
-    async def get_ecampus_token(self) -> str:
+    async def get_token(self) -> str:
         """
         Get ecampus token.
         Call this method if the x-token is not provided at initialization.
         :param sess:
         :return:
         """
-        token = await ECampusOaRequest.authorize_and_extract_token(self.sess)
+        token = await ECampusOaRequest.authorize(self.sess)
         self.sess.headers['X-Id-Token'] = token
         return token
     
